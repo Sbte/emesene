@@ -15,8 +15,8 @@ import extension
 import e3
 from e3 import dummy
 
-from gui import gtkui
 import gui
+from gui import gtkui
 
 import testutils
 
@@ -24,6 +24,8 @@ class ConversationTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         print 'setup'
+        main_method = extension.get_default('main')
+        main_method()
         extension.category_register('session', dummy.Session, single_instance=True)
         extension.category_register('sound', e3.common.Sounds.SoundPlayer,
                 None, True)
@@ -40,6 +42,7 @@ class ConversationTestCase(unittest.TestCase):
         window = windowcls(cls.dummy)
 
         window.go_conversation(cls.session)
+
         conv_manager = window.content
         cls.conversations = []
         cls.conversations.append(conv_manager)
@@ -54,7 +57,7 @@ class ConversationTestCase(unittest.TestCase):
 
         cls.conversation1.update_data()
         cls.conversation1.show()
-        #~ conv_manager.present(cls.conversation1)
+        conv_manager.present(cls.conversation1)
 
         contact = cls.session.contacts.get('you@emesene.org')
 
@@ -64,13 +67,15 @@ class ConversationTestCase(unittest.TestCase):
 
         cls.conversation2.update_data()
         cls.conversation2.show()
+        cls.conversation1.input.on_send_message(testutils.random_string())
+
         print 'setup done'
 
     @classmethod
     def _set_config(cls):
         cls.session.config.get_or_set('b_conv_minimized', True)
         cls.session.config.get_or_set('b_conv_maximized', False)
-        cls.session.config.get_or_set('b_mute_sounds', False)
+        cls.session.config.get_or_set('b_mute_sounds', True)
         cls.session.config.get_or_set('b_play_send', True)
         cls.session.config.get_or_set('b_play_nudge', True)
         cls.session.config.get_or_set('b_play_first_send', True)
@@ -86,6 +91,10 @@ class ConversationTestCase(unittest.TestCase):
         cls.session.config.get_or_set('b_show_info', True)
         cls.session.config.get_or_set('b_show_toolbar', True)
         cls.session.config.get_or_set('b_allow_auto_scroll', True)
+        cls.session.config.get_or_set('image_theme', 'default')
+        cls.session.config.get_or_set('emote_theme', 'default')
+        cls.session.config.get_or_set('sound_theme', 'default')
+        cls.session.config.get_or_set('adium_theme_variant', '')
         cls.session.config.get_or_set('adium_theme', 'renkoo.AdiumMessageStyle')
         cls.session.config.get_or_set('b_enable_spell_check', False)
         cls.session.config.get_or_set('b_download_folder_per_account', False)
@@ -93,12 +102,17 @@ class ConversationTestCase(unittest.TestCase):
         cls.session.config.get_or_set('override_text_color', '#000000')
         cls.session.config.get_or_set('d_user_service', {})
 
+        signals = cls.session.signals
+        signals.login_succeed.subscribe(cls.dummy)
+        signals.login_failed.subscribe(cls.dummy)
+        signals.contact_list_ready.subscribe(cls.dummy)
+        signals.conv_first_action.subscribe(cls.dummy)
+
     @classmethod
     def dummy(cls, *args):
-        pass
+        print 'dummy called'
 
     def test_focus(self):
-        time.sleep(1)
         print self.conversation1.output.view
         print self.conversation1.output.view.text
         self.conversation1.input.on_send_message(testutils.random_string())
@@ -108,30 +122,13 @@ class ConversationTestCase(unittest.TestCase):
         print self.conversation2.output.view.text
         print self.conversation2.output.view.text
         print self.conversation1.output.view.text
-
-class Window(gtk.Window):
-    def __init__(self):
-        gtk.Window.__init__(self)
-
-        button = gtk.Button('Start gtk test')
-        button.connect('clicked', self.start)
-        self.add(button)
-        self.show_all()
-
-    def start(self, *args):
-        suite = unittest.TestLoader().loadTestsFromTestCase(ConversationTestCase)
-        unittest.TextTestRunner(verbosity=2).run(suite)
+        print self.conversation1.output.view.pending[0]
+        print self.conversation2.output.view.pending[0]
 
 
-class Controller:
-    def __init__(self):
-        pass
-
-    def start(self):
-        window = Window()
-
-    def on_close(self):
-        pass
-
-main_method = extension.get_default('main')
-main_method(Controller)
+    @classmethod
+    def tearDownClass(cls):
+        if cls.session:
+            cls.session.quit()
+        time.sleep(1)
+        shutil.rmtree(cls.session.config_dir.base_dir)

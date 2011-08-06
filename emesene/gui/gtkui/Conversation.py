@@ -131,8 +131,7 @@ class Conversation(gtk.VBox, gui.Conversation):
             self.header.information = ('connecting', 'creating conversation')
 
         last_avatar = self.session.config.last_avatar
-        if self.session.config.last_avatar and \
-           self.session.config_dir.file_readable(last_avatar):
+        if last_avatar and self.session.config_dir.file_readable(last_avatar):
             my_picture = last_avatar
         else:
             my_picture = gui.theme.image_theme.user

@@ -25,7 +25,7 @@ PYNOTIFYERROR = False
 MESSAGINGMENUERROR = False
 GROWLERROR = False
 
-def gtk_main(Controller):
+def gtk_main(Controller=None):
     """ main method for gtk frontend
     """
     global WEBKITERROR, INDICATORERROR, INFOBARERROR, PYNOTIFYERROR, MESSAGINGMENUERROR, GROWLERROR
@@ -106,14 +106,15 @@ def gtk_main(Controller):
     import PictureHandler
 
     setup()
-    gobject.threads_init()
-    gtk.gdk.threads_init()
-    gtk.gdk.threads_enter()
-    controller = Controller()
-    controller.start()
-    gtk.quit_add(0, controller.on_close)
-    gtk.main()
-    gtk.gdk.threads_leave()
+    if Controller:
+        gobject.threads_init()
+        gtk.gdk.threads_init()
+        gtk.gdk.threads_enter()
+        controller = Controller()
+        controller.start()
+        gtk.quit_add(0, controller.on_close)
+        gtk.main()
+        gtk.gdk.threads_leave()
 
 
 gtk_main.NAME = "Gtk main function"
