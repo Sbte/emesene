@@ -25,6 +25,7 @@ import sys
 import extension
 import stock
 from Language import Language
+import SmartWidgets
 
 from gui.base import MarkupParser
 
@@ -273,7 +274,7 @@ class BaseTable(gtk.Table):
         """add a label with thext to row and column, align the text left if
         align_left is True
         """
-        label = gtk.Label(text)
+        label = SmartWidgets.SmartLabel(self.session, text)
         self.add_label(label, column, row, align_left)
 
     def add_label(self, label, column, row,
@@ -332,15 +333,15 @@ class BaseTable(gtk.Table):
             extension.get_default('dialog').contactlist_format_help(format_type)
 
         hbox = gtk.HBox(spacing=4)
-        label = gtk.Label(text)
+        label = SmartWidgets.SmartLabel(self.session, text)
         label.set_alignment(0.0, 0.5)
         text = self.get_attr(property_name)
 
         entry = gtk.Entry()
         entry.set_text(text)
 
-        reset = gtk.Button()
-        entry_help = gtk.Button()
+        reset = SmartWidgets.SmartButton(self.session)
+        entry_help = SmartWidgets.SmartButton(self.session)
 
         hbox.pack_start(label)
         hbox.pack_start(entry, False)
@@ -366,7 +367,7 @@ class BaseTable(gtk.Table):
         set the check state with default
         """
         default = self.get_attr(property_name)
-        widget = gtk.CheckButton(text)
+        widget = SmartWidgets.SmartCheckButton(self.session, text)
         widget.set_active(default)
         widget.connect('toggled', self.on_toggled, property_name)
         return widget
@@ -386,7 +387,7 @@ class BaseTable(gtk.Table):
         """
         hbox = gtk.HBox()
         hbox.set_homogeneous(True)
-        label = gtk.Label(text)
+        label = SmartWidgets.SmartLabel(self.session, text)
         label.set_alignment(0.0, 0.5)
         default = self.get_attr(property_name)
 
@@ -445,7 +446,7 @@ class BaseTable(gtk.Table):
         """
         hbox = gtk.HBox()
         hbox.set_homogeneous(True)
-        label = gtk.Label(text)
+        label = SmartWidgets.SmartLabel(self.session, text)
         label.set_alignment(0.0, 0.5)
         combo = self.create_combo(getter, property_name, values, changed_cb)
 
@@ -460,12 +461,25 @@ class BaseTable(gtk.Table):
         hbox = self.create_combo_with_label(text, getter, property_name, values)
         self.append_row(hbox, None)
 
+    def append_bold_markup(self, text):
+        """append a label
+        """
+        hbox = gtk.HBox()
+        hbox.set_homogeneous(True)
+        label = SmartWidgets.SmartLabel(self.session)
+        label.set_alignment(0.0, 0.5)
+        label.set_bold_text(text)
+
+        hbox.pack_start(label, True, True)
+
+        self.append_row(hbox, None)
+
     def append_markup(self, text):
         """append a label
         """
         hbox = gtk.HBox()
         hbox.set_homogeneous(True)
-        label = gtk.Label()
+        label = SmartWidgets.SmartLabel(self.session)
         label.set_alignment(0.0, 0.5)
         label.set_markup(text)
 
@@ -562,12 +576,12 @@ class MainWindow(BaseTable):
 
         ContactList = extension.get_default('contact list')
 
-        self.append_markup('<b>'+_('User panel:')+'</b>')
+        self.append_bold_markup(_('User panel:'))
 
         self.append_check(_('Show user panel'),
             'session.config.b_show_userpanel')
 
-        self.append_markup('<b>'+_('Contact list:')+'</b>')
+        self.append_bold_markup(_('Contact list:'))
         self.append_range(_('Contact list avatar size'),
             'session.config.i_avatar_size', 18, 64)
 
@@ -588,7 +602,7 @@ class MainWindow(BaseTable):
                                     '/Applications/emesene.app/Contents/Info'
                                     ' LSUIElement -bool true', shell=True)
 
-            self.append_markup('<b>'+_('OS X Integration:')+'</b>')
+            self.append_bold_markup(_('OS X Integration:'))
             self.session.config.get_or_set('b_show_dock_icon', False)    
             
             button = self.append_check(_('Show dock icon '
@@ -780,10 +794,10 @@ class Sound(BaseTable):
         self.set_border_width(5)
         self.session = session
         self.array = []
-        self.append_markup('<b>'+_('General:')+'</b>')
+        self.append_bold_markup(_('General:'))
         self.append_check(_('Mute sounds'),
             'session.config.b_mute_sounds')
-        self.append_markup('<b>'+_('Messages events:')+'</b>')
+        self.append_bold_markup(_('Messages events:'))
         self.array.append(self.append_check(_('Play sound on sent message'),
             'session.config.b_play_send'))
         self.array.append(self.append_check(_('Play sound on first received message'),
@@ -794,7 +808,7 @@ class Sound(BaseTable):
             'session.config.b_play_nudge'))
         self.array.append(self.append_check(_('Mute sounds when the conversation has focus'),
             'session.config.b_mute_sounds_when_focussed'))
-        self.append_markup('<b>'+_('Users events:')+'</b>')
+        self.append_bold_markup(_('Users events:'))
         self.array.append(self.append_check(_('Play sound on contact online'),
             'session.config.b_play_contact_online'))
         self.array.append(self.append_check(_('Play sound on contact offline'),
@@ -828,12 +842,12 @@ class Notification(BaseTable):
         BaseTable.__init__(self, 4, 1)
         self.set_border_width(5)
         self.session = session
-        self.append_markup('<b>'+_('Users events:')+'</b>')
+        self.append_bold_markup(_('Users events:'))
         self.append_check(_('Notify on contact online'),
             'session.config.b_notify_contact_online')
         self.append_check(_('Notify on contact offline'),
             'session.config.b_notify_contact_offline')
-        self.append_markup('<b>'+_('Messages events:')+'</b>')
+        self.append_bold_markup(_('Messages events:'))
         self.append_check(_('Notify on received message'),
             'session.config.b_notify_receive_message')
         self.append_check(_('Notify when a contact is typing'),
@@ -880,7 +894,7 @@ class Theme(BaseTable):
         self.add(self.tabs)
 
         hbox = gtk.HBox(True)
-        label = gtk.Label(_('Adium theme variant'))
+        label = SmartWidgets.SmartLabel(self.session, _('Adium theme variant'))
         label.set_alignment(0.0, 0.5)
         self.adium_variant_combo = self.create_combo(gui.theme.conv_theme.get_theme_variants,
                 'session.config.adium_theme_variant',
@@ -961,11 +975,11 @@ class Extension(BaseTable):
         self.set_border_width(5)
         self.session = session
 
-        self.category_info = gtk.Label('')
-        self.name_info = gtk.Label('')
-        self.description_info = gtk.Label('')
-        self.author_info = gtk.Label('')
-        self.website_info = gtk.Label('')
+        self.category_info = SmartWidgets.SmartLabel(self.session, '')
+        self.name_info = SmartWidgets.SmartLabel(self.session, '')
+        self.description_info = SmartWidgets.SmartLabel(self.session, '')
+        self.author_info = SmartWidgets.SmartLabel(self.session, '')
+        self.website_info = SmartWidgets.SmartLabel(self.session, '')
         self.extensions = gtk.combo_box_new_text()
         self.categories = gtk.combo_box_new_text()
         self.extension_list = []
@@ -1105,17 +1119,14 @@ class DesktopTab(BaseTable):
         self.set_border_width(5)
         self.session = session
 
-        self.append_markup('<b>'+_('Logger')+'</b>')
+        self.append_bold_markup(_('Logger'))
         self.append_check(_('Enable logger'),
                           'session.config.b_log_enabled')
                           
         # language settings
-        self.append_markup('<b>'+_('Language')+'</b>')
+        self.append_bold_markup(_('Language'))
         # languages combobox
         self._language_management = Language()
-
-        self.session.config.subscribe(self._on_language_changed,
-                                      'language_config')
 
         self.add_text(_("Select language:"), 0, 3,  True)
 
@@ -1151,7 +1162,7 @@ class DesktopTab(BaseTable):
 
         self.attach(self.language_combo, 2, 3, 3, 4, gtk.EXPAND|gtk.FILL, 0)
 
-        self.append_markup('<b>'+_('File transfers')+'</b>')
+        self.append_markup(_('File transfers'))
         self.append_check(_('Sort received files by sender'),
                           'session.config.b_download_folder_per_account')
         self.add_text(_('Save files to:'), 0, 6, True)
@@ -1171,13 +1182,11 @@ class DesktopTab(BaseTable):
                 e3.common.locations.downloads()))
         fc_button.connect('selection-changed', on_path_selected)
         self.attach(fc_button, 2, 3, 6, 7, gtk.EXPAND|gtk.FILL, 0)
-
-    def _on_language_changed(self,  lang):
-        self._language_management.install_desired_translation(lang)
     
     def on_language_combo_changed(self, combo, property_name):
         index = combo.get_active()
         lang_key = combo.get_model()[index][0]
+        self._language_management.install_desired_translation(lang_key)
         self.set_attr(property_name, lang_key)
 
 
@@ -1201,7 +1210,7 @@ class MSNPapylib(BaseTable):
         c_keep.connect('toggled', self._on_keepalive_toggled)
         vbox.pack_start(c_keep, False, False)
 
-        l_text = gtk.Label(_('If you have problems with your nickname/message/picture '
+        l_text = SmartWidgets.SmartLabel(self.session, _('If you have problems with your nickname/message/picture '
                         'just click on this button, sign in with your account '
                         'and load a picture in your Live Profile. '
                         'Then restart emesene and have fun.'))
@@ -1212,7 +1221,7 @@ class MSNPapylib(BaseTable):
         hbox = gtk.HBox(False, 0)
         align2 = gtk.Alignment(0.5, 0.5, 1, 1)
         hbox.pack_start(align2, True, False)
-        button = gtk.Button(_('Open Live Profile'))
+        button = SmartWidgets.SmartButton(self.session, _('Open Live Profile'))
         button.connect('clicked', self._on_live_profile_clicked)
         align2.add(button)
 
@@ -1246,7 +1255,7 @@ class Facebook(BaseTable):
         self.set_border_width(5)
         self.session = session
 
-        self.append_markup('<b>'+_('Facebook Integration:')+'</b>')
+        self.append_bold_markup(_('Facebook Integration:'))
         self.append_check(_('Enable Facebook integration'),
                           'session.config.b_fb_enable_integration')
         self.append_check(_('Automatically check Facebook mail'),
@@ -1262,7 +1271,7 @@ class Facebook(BaseTable):
         eventBox.modify_bg(gtk.STATE_NORMAL, gtk.gdk.Color('#EDDE5C'))
 
         markup = '<span foreground="black"> %s </span>'
-        noticelabel = gtk.Label()
+        noticelabel = SmartWidgets.SmartLabel(self.session)
         text = _("<b>WARNING: This will reset your facebook token."
                  "\nemesene will ask you to login into facebook on"
                  " next login</b>")
@@ -1305,13 +1314,13 @@ class PrivacySettings(gtk.VBox):
         # tooltip labels
         labels_box = gtk.VBox()
         markup = '<span foreground="black"> %s </span>'
-        firstLabel = gtk.Label()
+        firstLabel = SmartWidgets.SmartLabel(self.session)
         text = _('Red contacts are not in your contact list.')
         firstLabel.set_markup(markup % text)
-        secondLabel = gtk.Label()
+        secondLabel = SmartWidgets.SmartLabel(self.session)
         text = _('Yellow contacts don\'t have you in their contact list.')
         secondLabel.set_markup(markup % text)
-        l_warning = gtk.Label()
+        l_warning = SmartWidgets.SmartLabel(self.session)
         text = _("<b>WARNING: The information provided below "
                  "may be inaccurate.</b>")
 
@@ -1348,14 +1357,14 @@ class PrivacySettings(gtk.VBox):
 
         # buttons
         vbox = gtk.VBox()
-        button1 = gtk.Button()
+        button1 = SmartWidgets.SmartButton(self.session)
         image1 = gtk.image_new_from_stock(gtk.STOCK_GO_BACK,
                                           gtk.ICON_SIZE_BUTTON)
         button1.set_image(image1)
         button1.connect('clicked', self.unblock)
         vbox.pack_start(button1, True, False)
 
-        button2 = gtk.Button()
+        button2 = SmartWidgets.SmartButton(self.session)
         image2 = gtk.image_new_from_stock(gtk.STOCK_GO_FORWARD,
                                           gtk.ICON_SIZE_BUTTON)
         button2.set_image(image2)
